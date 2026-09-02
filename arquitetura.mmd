@@ -1,0 +1,11 @@
+flowchart LR
+  A[Sensor ultrassônico<br/>Ponto A] --> NA[Nó Edge A<br/>ESP32]
+  B[Sensor ultrassônico<br/>Ponto B] --> NB[Nó Edge B<br/>ESP32]
+  NA -- ESP-NOW: eventos filtrados --> G[Gateway Edge<br/>ESP32]
+  NB -- ESP-NOW: eventos filtrados --> G
+  G -->|LED/buzzer: alerta local| R[Resultado local<br/>NORMAL / ATENÇÃO / CORTE]
+  G -->|MQTT somente eventos| C[Internet / Nuvem]
+  G -.->|sem internet: fila local| Q[(Fila offline)]
+  Q -.->|reconexão: reenvio| C
+  classDef edge fill:#dff4e8,stroke:#18864b,stroke-width:2px;
+  class NA,NB,G edge;
