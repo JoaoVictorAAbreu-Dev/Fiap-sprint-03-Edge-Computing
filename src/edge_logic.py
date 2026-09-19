@@ -1,6 +1,7 @@
 """Regras de processamento local do sistema de monitoramento de vegetação."""
 
 from dataclasses import dataclass
+from math import isfinite
 from statistics import fmean
 from typing import Iterable
 
@@ -22,9 +23,21 @@ class FilterResult:
     average: float | None
 
 
-def filter_readings(readings: Iterable[float]) -> FilterResult:
-    """Remove leituras impossíveis e calcula a média do lote localmente."""
-    valid = [float(value) for value in readings if MIN_VALID_HEIGHT <= value <= MAX_VALID_HEIGHT]
+def filter_readings(readings: Iterable[object]) -> FilterResult:
+    """Remove leituras inválidas e calcula a média do lote no Edge.
+
+    Além dos limites físicos do sensor, valores não numéricos e ``NaN`` são
+    descartados para que uma amostra corrompida não interrompa o ciclo.
+    """
+    valid: list[float] = []
+    for raw_value in readings:
+        try:
+            value = float(raw_value)
+        except (TypeError, ValueError):
+            continue
+        if isfinite(value) and MIN_VALID_HEIGHT <= value <= MAX_VALID_HEIGHT:
+            valid.append(value)
+
     return FilterResult(valid, round(fmean(valid), 2) if valid else None)
 
 
@@ -37,8 +50,14 @@ def classify_height(height: float) -> Classification:
     return Classification("CORTE_NECESSARIO", 2)
 
 
-def build_event(node_id: str, readings: Iterable[float], previous_label: str | None) -> dict | None:
-    """Converte leituras em evento compacto; retorna None quando não há mudança relevante."""
+def build_event(
+    node_id: str, readings: Iterable[object], previous_label: str | None
+) -> dict[str, object] | None:
+    """Converte leituras em evento compacto.
+
+    O nó transmite uma falha, uma mudança de estado ou qualquer estado de
+    atenção/alerta. Leituras normais repetidas permanecem somente no Edge.
+    """
     filtered = filter_readings(readings)
     if filtered.average is None:
         return {

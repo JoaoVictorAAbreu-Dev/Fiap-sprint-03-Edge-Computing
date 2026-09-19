@@ -43,21 +43,21 @@ Essa decisão ocorre no dispositivo próximo ao sensor para reduzir latência, c
 
 ## Estratégia de comunicação e falhas
 
-A comunicação entre os ESP32 usa **ESP-NOW**, pois é direta, leve e não depende de um roteador para a comunicação local. O gateway usa MQTT apenas para integração externa. Em caso de perda de internet, os sensores continuam medindo e o gateway continua acionando o alerta local. Os eventos externos são armazenados em uma fila offline de demonstração e ficam disponíveis para reenvio após a reconexão.
+A comunicação entre os ESP32 usa **ESP-NOW**, pois é direta, leve e não depende de um roteador para a comunicação local. O gateway usa MQTT apenas para integração externa. Em caso de perda de internet, os sensores continuam medindo e o gateway continua acionando o alerta local. Os eventos externos são armazenados em uma fila offline de demonstração e reenviados após a reconexão.
 
-Na versão de campo, a fila em RAM deve ser substituída por armazenamento persistente, como NVS/Preferences ou cartão SD, para preservar eventos após reinicializações.
+Na PoC, a fila offline fica em RAM e é drenada quando o gateway reconecta ao MQTT. Na versão de campo, ela deve ser substituída por armazenamento persistente, como NVS/Preferences ou cartão SD, para preservar eventos após reinicializações.
 
 ## Como executar a demonstração local
 
 A lógica de negócio possui uma implementação Python independente do hardware. Ela permite validar a decisão Edge e apresentar os cenários antes da montagem física.
 
 ```bash
-cd /home/ubuntu/vegetacao-edge-sprint03
+cd Fiap-sprint-03-Edge-Computing
 python3 -m unittest discover -s tests -v
 PYTHONPATH=src python3 src/simulate.py
 ```
 
-A suíte automatizada valida classificação, filtragem, média, mudança de estado e falha de sensor. O simulador demonstra vegetação normal, atenção, corte necessário e perda de conectividade.
+A suíte automatizada valida classificação, limites, filtragem, média, mudança de estado, entradas corrompidas e falha de sensor. O simulador demonstra vegetação normal, atenção, corte necessário, perda de conectividade e reenvio após reconexão.
 
 ## Montagem no Wokwi ou em hardware
 
@@ -72,7 +72,7 @@ Antes de executar os nós, substitua `gatewayMac` pelo endereço MAC real do gat
 | Normal | 18–21 cm | Monitoramento continua sem transmissões repetitivas |
 | Atenção | 26–27 cm | Gateway recebe `ATENCAO` |
 | Corte necessário | 33–35 cm | Gateway recebe alerta e acende LED |
-| Falha | Timeout/valor inválido e internet desligada | `FALHA_SENSOR` e evento guardado na fila offline |
+| Falha/reconexão | Timeout/valor inválido, internet desligada e depois restaurada | `FALHA_SENSOR`, evento guardado e reenvio após conexão |
 
 O roteiro completo está em [`docs/teste-cenarios.md`](docs/teste-cenarios.md). As justificativas da estratégia Edge estão em [`docs/estrategia-edge.md`](docs/estrategia-edge.md).
 
@@ -98,7 +98,7 @@ O roteiro completo está em [`docs/teste-cenarios.md`](docs/teste-cenarios.md). 
 | Comunicação entre dispositivos | ESP-NOW entre nós e gateway |
 | Tratamento local | Valores inválidos, média e estados de ação |
 | Arquitetura e documentação | Diagrama, especificação e justificativas técnicas |
-| Testes e falhas | Quatro testes automatizados e cenário offline |
+| Testes e falhas | Testes automatizados, cenários offline e reconexão |
 
 ## Limitações conhecidas
 

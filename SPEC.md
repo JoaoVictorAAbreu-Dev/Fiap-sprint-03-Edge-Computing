@@ -27,7 +27,7 @@ manus-render-diagram diagrams/arquitetura.mmd docs/arquitetura.png
 | Tratamento de dados | descarte de valores inválidos, média de cinco amostras, classificação e eventos |
 | Estratégia | transmissão somente em mudança/alerta; justificativa em `docs/estrategia-edge.md` |
 | Cenários | normal, atenção, corte e falha cobertos por testes e simulador |
-| Falha | fila offline no gateway e manutenção da decisão/LED local |
+| Falha | fila offline com reenvio após reconexão e manutenção da decisão/LED local |
 
 ## Limites e premissas
-A simulação considera o sensor ultrassônico como medidor de altura já calibrado em centímetros. A fila do firmware é uma fila RAM de demonstração; em uma evolução para campo, deve ser persistida em NVS/Preferences para sobreviver a reinicialização.
+A simulação considera o sensor ultrassônico como medidor de altura já calibrado em centímetros. A fila do firmware é uma fila circular limitada a dez eventos em RAM, drenada após reconexão; em uma evolução para campo, deve ser persistida em NVS/Preferences para sobreviver a reinicializações.
